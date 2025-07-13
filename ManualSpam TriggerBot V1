@@ -1,0 +1,140 @@
+local uis = game:GetService("UserInputService")
+local vim = game:GetService("VirtualInputManager")
+local runService = game:GetService("RunService")
+local players = game:GetService("Players")
+local lp = players.LocalPlayer
+local char = lp.Character or lp.CharacterAdded:Wait()
+
+-- Toggles
+local spamOn = false
+local triggerOn = false
+local wasTargetedLastFrame = false
+
+-- GUI Setup
+local gui = Instance.new("ScreenGui", game.CoreGui)
+gui.Name = "JustF1exUI"
+gui.ResetOnSpawn = false
+
+-- Intro Animation
+local intro = Instance.new("TextLabel", gui)
+intro.Size = UDim2.new(0, 400, 0, 60)
+intro.Position = UDim2.new(0.5, -200, 0.45, 0)
+intro.BackgroundTransparency = 1
+intro.Text = "Made by JustF1ex"
+intro.Font = Enum.Font.GothamBlack
+intro.TextScaled = true
+intro.TextColor3 = Color3.fromRGB(255, 255, 255)
+intro.TextStrokeTransparency = 0.4
+intro.TextStrokeColor3 = Color3.new(0, 0, 0)
+
+task.spawn(function()
+	for i = 0, 1, 0.05 do
+		intro.TextTransparency = 1 - i
+		intro.TextStrokeTransparency = 1 - i
+		task.wait(0.03)
+	end
+	wait(2)
+	for i = 0, 1, 0.05 do
+		intro.TextTransparency = i
+		intro.TextStrokeTransparency = i
+		task.wait(0.03)
+	end
+	intro:Destroy()
+end)
+
+-- Clean Frame
+local frame = Instance.new("Frame", gui)
+frame.Size = UDim2.new(0, 200, 0, 60)
+frame.Position = UDim2.new(0, 15, 1, -80)
+frame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+frame.BackgroundTransparency = 0.2
+frame.BorderSizePixel = 0
+Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 10)
+Instance.new("UIStroke", frame).Color = Color3.new(0, 0, 0)
+
+-- Spam Label
+local spamLabel = Instance.new("TextLabel", frame)
+spamLabel.Size = UDim2.new(1, 0, 0.5, 0)
+spamLabel.Position = UDim2.new(0, 0, 0, 0)
+spamLabel.BackgroundTransparency = 1
+spamLabel.Font = Enum.Font.GothamBold
+spamLabel.TextScaled = true
+spamLabel.TextColor3 = Color3.fromRGB(255, 0, 0)
+spamLabel.Text = "Spam : R"
+
+-- TriggerBot Label
+local triggerLabel = Instance.new("TextLabel", frame)
+triggerLabel.Size = UDim2.new(1, 0, 0.5, 0)
+triggerLabel.Position = UDim2.new(0, 0, 0.5, 0)
+triggerLabel.BackgroundTransparency = 1
+triggerLabel.Font = Enum.Font.GothamBold
+triggerLabel.TextScaled = true
+triggerLabel.TextColor3 = Color3.fromRGB(255, 0, 0)
+triggerLabel.Text = "TriggerBot : X"
+
+-- UI Update Function
+local function updateUI()
+	spamLabel.TextColor3 = spamOn and Color3.fromRGB(0, 255, 0) or Color3.fromRGB(255, 0, 0)
+	triggerLabel.TextColor3 = triggerOn and Color3.fromRGB(0, 255, 0) or Color3.fromRGB(255, 0, 0)
+end
+
+updateUI()
+
+-- Key Toggles
+uis.InputBegan:Connect(function(input, gpe)
+	if gpe then return end
+	if input.KeyCode == Enum.KeyCode.R then
+		spamOn = not spamOn
+		updateUI()
+	elseif input.KeyCode == Enum.KeyCode.X then
+		triggerOn = not triggerOn
+		updateUI()
+	end
+end)
+
+-- Spam Loop (R)
+task.spawn(function()
+	while true do
+		if spamOn then
+			vim:SendKeyEvent(true, Enum.KeyCode.E, false, game)
+			vim:SendKeyEvent(false, Enum.KeyCode.E, false, game)
+			task.wait(0.005)
+		else
+			task.wait(0.1)
+		end
+	end
+end)
+
+-- Check if you're targeted
+local function isTargeted()
+	if not char or not char:FindFirstChild("HumanoidRootPart") then return false end
+	for _, obj in pairs(char:GetDescendants()) do
+		if obj:IsA("Highlight") and obj.Name:lower():find("highlight") then
+			return true
+		end
+	end
+	return false
+end
+
+-- TriggerBot Loop (X)
+task.spawn(function()
+	while true do
+		if triggerOn then
+			local nowTargeted = isTargeted()
+			if nowTargeted and not wasTargetedLastFrame then
+				-- Just became targeted, press E ONCE
+				vim:SendKeyEvent(true, Enum.KeyCode.E, false, game)
+				vim:SendKeyEvent(false, Enum.KeyCode.E, false, game)
+			end
+			wasTargetedLastFrame = nowTargeted
+		else
+			wasTargetedLastFrame = false
+		end
+		task.wait(0.01)
+	end
+end)
+
+-- Update character reference if you die
+lp.CharacterAdded:Connect(function(c)
+	char = c
+end)
