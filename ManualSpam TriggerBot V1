@@ -15,10 +15,10 @@ local gui = Instance.new("ScreenGui", game.CoreGui)
 gui.Name = "JustF1exUI"
 gui.ResetOnSpawn = false
 
--- 3D Intro
+-- 3D Intro Text
 local intro = Instance.new("TextLabel", gui)
 intro.Size = UDim2.new(0, 500, 0, 80)
-intro.Position = UDim2.new(0.5, -250, 0.45, 0)
+intro.Position = UDim2.new(0.5, -250, 0.42, 0)
 intro.BackgroundTransparency = 1
 intro.Text = "Made by JustF1ex"
 intro.Font = Enum.Font.GothamBlack
@@ -27,61 +27,64 @@ intro.TextColor3 = Color3.fromRGB(255, 255, 255)
 intro.TextStrokeTransparency = 0
 intro.TextStrokeColor3 = Color3.new(0, 0, 0)
 
+local glow = Instance.new("UIStroke", intro)
+glow.Color = Color3.new(1, 1, 1)
+glow.Thickness = 2
+glow.Transparency = 0.2
+
 task.spawn(function()
-	for i = 0, 1, 0.05 do
-		intro.TextTransparency = 1 - i
-		intro.TextStrokeTransparency = 1 - i
-		task.wait(0.03)
-	end
-	wait(2)
-	for i = 0, 1, 0.05 do
+	wait(5)
+	for i = 0, 1, 0.03 do
 		intro.TextTransparency = i
 		intro.TextStrokeTransparency = i
+		glow.Transparency = i
 		task.wait(0.03)
 	end
 	intro:Destroy()
 end)
 
--- GUI Panel
+-- Corner Frame (Bottom Left)
 local frame = Instance.new("Frame", gui)
-frame.Size = UDim2.new(0, 190, 0, 50)
-frame.Position = UDim2.new(0, 15, 1, -65)
-frame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
-frame.BackgroundTransparency = 0.1
+frame.Size = UDim2.new(0, 200, 0, 55)
+frame.Position = UDim2.new(0, 15, 1, -70)
+frame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+frame.BackgroundTransparency = 0.2
 frame.BorderSizePixel = 0
-local corner = Instance.new("UICorner", frame)
-corner.CornerRadius = UDim.new(0, 8)
+Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 10)
 
 local stroke = Instance.new("UIStroke", frame)
-stroke.Color = Color3.new(0, 0, 0)
-stroke.Thickness = 1.5
+stroke.Color = Color3.fromRGB(255, 255, 255)
+stroke.Thickness = 2
+stroke.Transparency = 0.15
+stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
 
--- Labels
+-- Spam Label
 local spamLabel = Instance.new("TextLabel", frame)
-spamLabel.Size = UDim2.new(1, 0, 0.5, 0)
-spamLabel.Position = UDim2.new(0, 0, 0, 0)
+spamLabel.Size = UDim2.new(1, -14, 0.5, -2)
+spamLabel.Position = UDim2.new(0, 7, 0, 0)
 spamLabel.BackgroundTransparency = 1
 spamLabel.Font = Enum.Font.GothamSemibold
 spamLabel.TextScaled = true
 spamLabel.TextColor3 = Color3.fromRGB(255, 0, 0)
 spamLabel.Text = "Spam : R"
 
+-- Trigger Label
 local triggerLabel = Instance.new("TextLabel", frame)
-triggerLabel.Size = UDim2.new(1, 0, 0.5, 0)
-triggerLabel.Position = UDim2.new(0, 0, 0.5, 0)
+triggerLabel.Size = UDim2.new(1, -14, 0.5, -2)
+triggerLabel.Position = UDim2.new(0, 7, 0.5, 0)
 triggerLabel.BackgroundTransparency = 1
 triggerLabel.Font = Enum.Font.GothamSemibold
 triggerLabel.TextScaled = true
 triggerLabel.TextColor3 = Color3.fromRGB(255, 0, 0)
 triggerLabel.Text = "TriggerBot : X"
 
--- UI Update
+-- UI Toggle Colors
 local function updateUI()
 	spamLabel.TextColor3 = spamOn and Color3.fromRGB(0, 255, 0) or Color3.fromRGB(255, 0, 0)
 	triggerLabel.TextColor3 = triggerOn and Color3.fromRGB(0, 255, 0) or Color3.fromRGB(255, 0, 0)
 end
 
--- Key Toggles
+-- Input Toggles
 uis.InputBegan:Connect(function(input, gpe)
 	if gpe then return end
 	if input.KeyCode == Enum.KeyCode.R then
@@ -93,7 +96,7 @@ uis.InputBegan:Connect(function(input, gpe)
 	end
 end)
 
--- Spam (E > F > E > F) if R is ON
+-- Spam E > F > E > F
 task.spawn(function()
 	while true do
 		if spamOn then
@@ -109,7 +112,7 @@ task.spawn(function()
 	end
 end)
 
--- Detect Targeted (highlight = red)
+-- Target Check
 local function isTargeted()
 	if not char or not char:FindFirstChild("HumanoidRootPart") then return false end
 	for _, obj in pairs(char:GetDescendants()) do
@@ -120,7 +123,7 @@ local function isTargeted()
 	return false
 end
 
--- TriggerBot (X): press E instantly ONCE when targeted
+-- TriggerBot (E press if just targeted)
 task.spawn(function()
 	while true do
 		if triggerOn and not triggerCooldown then
@@ -137,7 +140,7 @@ task.spawn(function()
 	end
 end)
 
--- Update char on death
+-- Update on respawn
 lp.CharacterAdded:Connect(function(c)
 	char = c
 end)
