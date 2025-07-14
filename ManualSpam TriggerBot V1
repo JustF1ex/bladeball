@@ -8,23 +8,23 @@ local char = lp.Character or lp.CharacterAdded:Wait()
 -- Toggles
 local spamOn = false
 local triggerOn = false
-local wasTargetedLastFrame = false
+local triggerCooldown = false
 
 -- GUI Setup
 local gui = Instance.new("ScreenGui", game.CoreGui)
 gui.Name = "JustF1exUI"
 gui.ResetOnSpawn = false
 
--- Intro Animation
+-- 3D Intro
 local intro = Instance.new("TextLabel", gui)
-intro.Size = UDim2.new(0, 400, 0, 60)
-intro.Position = UDim2.new(0.5, -200, 0.45, 0)
+intro.Size = UDim2.new(0, 500, 0, 80)
+intro.Position = UDim2.new(0.5, -250, 0.45, 0)
 intro.BackgroundTransparency = 1
 intro.Text = "Made by JustF1ex"
 intro.Font = Enum.Font.GothamBlack
 intro.TextScaled = true
 intro.TextColor3 = Color3.fromRGB(255, 255, 255)
-intro.TextStrokeTransparency = 0.4
+intro.TextStrokeTransparency = 0
 intro.TextStrokeColor3 = Color3.new(0, 0, 0)
 
 task.spawn(function()
@@ -42,43 +42,44 @@ task.spawn(function()
 	intro:Destroy()
 end)
 
--- Clean Frame
+-- GUI Panel
 local frame = Instance.new("Frame", gui)
-frame.Size = UDim2.new(0, 200, 0, 60)
-frame.Position = UDim2.new(0, 15, 1, -80)
+frame.Size = UDim2.new(0, 190, 0, 50)
+frame.Position = UDim2.new(0, 15, 1, -65)
 frame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
-frame.BackgroundTransparency = 0.2
+frame.BackgroundTransparency = 0.1
 frame.BorderSizePixel = 0
-Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 10)
-Instance.new("UIStroke", frame).Color = Color3.new(0, 0, 0)
+local corner = Instance.new("UICorner", frame)
+corner.CornerRadius = UDim.new(0, 8)
 
--- Spam Label
+local stroke = Instance.new("UIStroke", frame)
+stroke.Color = Color3.new(0, 0, 0)
+stroke.Thickness = 1.5
+
+-- Labels
 local spamLabel = Instance.new("TextLabel", frame)
 spamLabel.Size = UDim2.new(1, 0, 0.5, 0)
 spamLabel.Position = UDim2.new(0, 0, 0, 0)
 spamLabel.BackgroundTransparency = 1
-spamLabel.Font = Enum.Font.GothamBold
+spamLabel.Font = Enum.Font.GothamSemibold
 spamLabel.TextScaled = true
 spamLabel.TextColor3 = Color3.fromRGB(255, 0, 0)
 spamLabel.Text = "Spam : R"
 
--- TriggerBot Label
 local triggerLabel = Instance.new("TextLabel", frame)
 triggerLabel.Size = UDim2.new(1, 0, 0.5, 0)
 triggerLabel.Position = UDim2.new(0, 0, 0.5, 0)
 triggerLabel.BackgroundTransparency = 1
-triggerLabel.Font = Enum.Font.GothamBold
+triggerLabel.Font = Enum.Font.GothamSemibold
 triggerLabel.TextScaled = true
 triggerLabel.TextColor3 = Color3.fromRGB(255, 0, 0)
 triggerLabel.Text = "TriggerBot : X"
 
--- UI Update Function
+-- UI Update
 local function updateUI()
 	spamLabel.TextColor3 = spamOn and Color3.fromRGB(0, 255, 0) or Color3.fromRGB(255, 0, 0)
 	triggerLabel.TextColor3 = triggerOn and Color3.fromRGB(0, 255, 0) or Color3.fromRGB(255, 0, 0)
 end
-
-updateUI()
 
 -- Key Toggles
 uis.InputBegan:Connect(function(input, gpe)
@@ -92,20 +93,23 @@ uis.InputBegan:Connect(function(input, gpe)
 	end
 end)
 
--- Spam Loop (R)
+-- Spam (E > F > E > F) if R is ON
 task.spawn(function()
 	while true do
 		if spamOn then
 			vim:SendKeyEvent(true, Enum.KeyCode.E, false, game)
 			vim:SendKeyEvent(false, Enum.KeyCode.E, false, game)
-			task.wait(0.005)
+			task.wait(0.002)
+			vim:SendKeyEvent(true, Enum.KeyCode.F, false, game)
+			vim:SendKeyEvent(false, Enum.KeyCode.F, false, game)
+			task.wait(0.002)
 		else
-			task.wait(0.1)
+			task.wait(0.05)
 		end
 	end
 end)
 
--- Check if you're targeted
+-- Detect Targeted (highlight = red)
 local function isTargeted()
 	if not char or not char:FindFirstChild("HumanoidRootPart") then return false end
 	for _, obj in pairs(char:GetDescendants()) do
@@ -116,25 +120,26 @@ local function isTargeted()
 	return false
 end
 
--- TriggerBot Loop (X)
+-- TriggerBot (X): press E instantly ONCE when targeted
 task.spawn(function()
 	while true do
-		if triggerOn then
-			local nowTargeted = isTargeted()
-			if nowTargeted and not wasTargetedLastFrame then
-				-- Just became targeted, press E ONCE
+		if triggerOn and not triggerCooldown then
+			if isTargeted() then
 				vim:SendKeyEvent(true, Enum.KeyCode.E, false, game)
 				vim:SendKeyEvent(false, Enum.KeyCode.E, false, game)
+				triggerCooldown = true
+				task.delay(0.6, function()
+					triggerCooldown = false
+				end)
 			end
-			wasTargetedLastFrame = nowTargeted
-		else
-			wasTargetedLastFrame = false
 		end
 		task.wait(0.01)
 	end
 end)
 
--- Update character reference if you die
+-- Update char on death
 lp.CharacterAdded:Connect(function(c)
 	char = c
 end)
+
+updateUI()
